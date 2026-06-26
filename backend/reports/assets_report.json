@@ -1,0 +1,60 @@
+[
+    {
+        "id": 1,
+        "ip_address": "45.33.32.156",
+        "hostname": "scanme.nmap.org",
+        "os": "Linux 5.0 - 5.14",
+        "status": "up",
+        "ports": [
+            {
+                "port": 22,
+                "service": "ssh",
+                "state": "open"
+            },
+            {
+                "port": 80,
+                "service": "http",
+                "state": "open"
+            },
+            {
+                "port": 9929,
+                "service": "nping-echo",
+                "state": "open"
+            },
+            {
+                "port": 31337,
+                "service": "tcpwrapped",
+                "state": "open"
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "ip_address": "45.33.32.156",
+        "hostname": "scanme.nmap.org",
+        "os": "Linux 5.0 - 5.14",
+        "status": "up",
+        "ports": [
+            {
+                "port": 22,
+                "service": "ssh",
+                "state": "open"
+            },
+            {
+                "port": 80,
+                "service": "http",
+                "state": "open"
+            },
+            {
+                "port": 9929,
+                "service": "nping-echo",
+                "state": "open"
+            },
+            {
+                "port": 31337,
+                "service": "tcpwrapped",
+                "state": "open"
+            }
+        ]
+    }
+]
