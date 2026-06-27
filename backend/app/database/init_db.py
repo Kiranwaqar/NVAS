@@ -5,6 +5,7 @@ from app.models.asset import Asset
 from app.models.port import Port
 from app.models.scan_log import ScanLog
 from app.models.user import User
+from app.models.vulnerability import Vulnerability
 
 Base.metadata.create_all(bind=engine)
 

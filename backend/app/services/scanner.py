@@ -1,8 +1,10 @@
 import nmap
 from datetime import datetime
+
 from app.models.asset import Asset
 from app.models.port import Port
 from app.models.scan_log import ScanLog
+from app.services.vulnerability_service import fetch_vulnerabilities
 
 scanner = nmap.PortScanner()
 
@@ -37,6 +39,9 @@ def get_vendor(scanner, host):
 
 
 def scan_target(scan_id, target, db):
+    print("========== SCAN STARTED ==========")
+    print("Target:", target)
+
     scan_log = db.query(ScanLog).filter(
         ScanLog.id == scan_id
     ).first()
@@ -45,20 +50,33 @@ def scan_target(scan_id, target, db):
         scan_log.status = "running"
         db.commit()
 
-        scanner.scan(hosts=target, arguments="-sV -O")
+        # OS detection temporarily removed
+        scanner.scan(hosts=target, arguments="-sV")
+
+        # Temporary debugging
+        from pprint import pprint
+
+        for host in scanner.all_hosts():
+            for proto in scanner[host].all_protocols():
+                for port in scanner[host][proto]:
+                    pprint(scanner[host][proto][port])
 
         total_hosts = 0
 
         for host in scanner.all_hosts():
+
             total_hosts += 1
 
-            # Check if asset already exists
+            # ----------------------------
+            # Asset
+            # ----------------------------
+
             existing_asset = db.query(Asset).filter(
                 Asset.ip_address == host
             ).first()
 
             if existing_asset:
-                # Update existing asset
+
                 existing_asset.hostname = scanner[host].hostname()
                 existing_asset.os = get_os(scanner, host)
                 existing_asset.host_status = scanner[host].state()
@@ -71,7 +89,7 @@ def scan_target(scan_id, target, db):
 
                 asset = existing_asset
 
-                # Remove old ports before adding new ones
+                # Delete old ports
                 db.query(Port).filter(
                     Port.asset_id == asset.id
                 ).delete()
@@ -79,7 +97,7 @@ def scan_target(scan_id, target, db):
                 db.commit()
 
             else:
-                # Create new asset
+
                 asset = Asset(
                     ip_address=host,
                     hostname=scanner[host].hostname(),
@@ -95,17 +113,49 @@ def scan_target(scan_id, target, db):
                 db.commit()
                 db.refresh(asset)
 
-            # Insert fresh ports
+            # ----------------------------
+            # Ports
+            # ----------------------------
+
             for proto in scanner[host].all_protocols():
+
                 for port in scanner[host][proto].keys():
+
+                    service_info = scanner[host][proto][port]
+
                     port_entry = Port(
                         asset_id=asset.id,
                         port_number=port,
-                        service=scanner[host][proto][port]["name"],
-                        state=scanner[host][proto][port]["state"]
+                        service=service_info.get("name", ""),
+                        state=service_info.get("state", "")
                     )
 
                     db.add(port_entry)
+
+                    # Generate port ID immediately
+                    db.flush()
+
+                    cpe = service_info.get("cpe", "")
+                    product = service_info.get("product", "")
+                    version = service_info.get("version", "")
+
+                    print("--------------------------------")
+                    print("Port:", port)
+                    print("Service:", product)
+                    print("Version:", version)
+                    print("CPE:", cpe)
+                    print(service_info)
+
+                    if cpe:
+
+                        fetch_vulnerabilities(
+                            db=db,
+                            cpe=cpe,
+                            asset_id=asset.id,
+                            port_id=port_entry.id,
+                            product=product,
+                            version=version
+                        )
 
             db.commit()
 
@@ -114,6 +164,11 @@ def scan_target(scan_id, target, db):
         db.commit()
 
     except Exception as e:
+
         scan_log.status = "failed"
         db.commit()
-        print("Scan failed")
+
+        print("========== ERROR ==========")
+        print(type(e))
+        print(e)
+        print("===========================")
