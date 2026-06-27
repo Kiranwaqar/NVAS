@@ -28,4 +28,4 @@ app.include_router(vulnerabilities.router)
 
 @app.get("/")
 def root():
-    return {"message": "NVAS Running"}
+    return {"message": "Scanvas Running"}

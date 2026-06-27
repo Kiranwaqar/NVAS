@@ -4,12 +4,17 @@ from sqlalchemy.orm import Session
 from app.database.session import get_db
 from app.models.asset import Asset
 from app.models.port import Port
+from pathlib import Path
 import json
 import csv
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 from app.services.auth import get_current_user, admin_required
 from app.models.user import User
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+REPORTS_DIR = BASE_DIR / "reports"
+REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 router = APIRouter()
 
@@ -43,13 +48,13 @@ def export_json(
             ]
         })
 
-    file_path = "reports/assets_report.json"
+    file_path = REPORTS_DIR / "assets_report.json"
 
     with open(file_path, "w") as f:
         json.dump(data, f, indent=4)
 
     return FileResponse(
-        file_path,
+        str(file_path),
         media_type="application/json",
         filename="assets_report.json"
     )
@@ -59,7 +64,7 @@ def export_csv(db: Session = Depends(get_db), current_user: User = Depends(get_c
     admin_required(current_user)
     assets = db.query(Asset).all()
 
-    file_path = "reports/assets_report.csv"
+    file_path = REPORTS_DIR / "assets_report.csv"
 
     with open(file_path, mode="w", newline="") as file:
         writer = csv.writer(file)
@@ -82,7 +87,7 @@ def export_csv(db: Session = Depends(get_db), current_user: User = Depends(get_c
             ])
 
     return FileResponse(
-        file_path,
+        str(file_path),
         media_type="text/csv",
         filename="assets_report.csv"
     )
@@ -95,15 +100,15 @@ def export_pdf(
     admin_required(current_user)
     assets = db.query(Asset).all()
 
-    file_path = "reports/assets_report.pdf"
+    file_path = REPORTS_DIR / "assets_report.pdf"
 
-    doc = SimpleDocTemplate(file_path)
+    doc = SimpleDocTemplate(str(file_path))
     styles = getSampleStyleSheet()
 
     content = []
 
     content.append(
-        Paragraph("NVAS Asset Report", styles["Title"])
+        Paragraph("Scanvas Asset Report", styles["Title"])
     )
 
     for asset in assets:
