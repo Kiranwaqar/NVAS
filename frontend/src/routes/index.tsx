@@ -200,7 +200,7 @@ function Landing() {
             <div className="grid h-7 w-7 place-items-center rounded-lg" style={{ background: "var(--gradient-cyber)" }}>
               <Shield className="h-4 w-4 text-white" />
             </div>
-            <span>© 2026 Scanvas — Final Year Project · All rights reserved.</span>
+            <span>© 2026 Scanvas — All rights reserved.</span>
           </div>
           <div className="flex gap-5">
             <a href="#" className="hover:text-foreground">Privacy</a>
