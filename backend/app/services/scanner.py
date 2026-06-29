@@ -4,7 +4,9 @@ from datetime import datetime
 from app.models.asset import Asset
 from app.models.port import Port
 from app.models.scan_log import ScanLog
+from app.models.vulnerability import Vulnerability
 from app.services.vulnerability_service import fetch_vulnerabilities
+from app.services.risk_service import calculate_asset_risk
 
 scanner = nmap.PortScanner()
 
@@ -89,11 +91,28 @@ def scan_target(scan_id, target, db):
 
                 asset = existing_asset
 
+                # ----------------------------
+                # Delete old vulnerabilities
+                # ----------------------------
+
+                old_ports = db.query(Port).filter(
+                    Port.asset_id == asset.id
+                ).all()
+
+                for port in old_ports:
+                    db.query(Vulnerability).filter(
+                        Vulnerability.port_id == port.id
+                    ).delete()
+
+                # ----------------------------
                 # Delete old ports
+                # ----------------------------
+
                 db.query(Port).filter(
                     Port.asset_id == asset.id
                 ).delete()
 
+                # Commit both deletions together
                 db.commit()
 
             else:
@@ -159,6 +178,7 @@ def scan_target(scan_id, target, db):
 
             db.commit()
 
+        calculate_asset_risk(asset.id, db)
         scan_log.status = f"completed ({total_hosts} hosts)"
         scan_log.completed_at = datetime.utcnow()
         db.commit()

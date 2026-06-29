@@ -12,8 +12,38 @@ from app.models.vulnerability import Vulnerability
 Base.metadata.create_all(bind=engine)
 
 with engine.begin() as conn:
+
     conn.execute(
-        text("ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR")
+        text(
+            "ALTER TABLE users "
+            "ADD COLUMN IF NOT EXISTS full_name VARCHAR"
+        )
     )
 
-print("Tables created successfully")
+    conn.execute(
+        text(
+            "ALTER TABLE assets "
+            "ADD COLUMN IF NOT EXISTS risk_score FLOAT"
+        )
+    )
+
+    conn.execute(
+        text(
+            "ALTER TABLE assets "
+            "ADD COLUMN IF NOT EXISTS risk_level VARCHAR"
+        )
+    )
+
+    conn.execute(
+        text(
+            "ALTER TABLE vulnerabilities "
+            "ADD COLUMN IF NOT EXISTS epss_score FLOAT"
+        )
+    )
+
+    conn.execute(
+        text(
+            "ALTER TABLE vulnerabilities "
+            "ADD COLUMN IF NOT EXISTS epss_percentile FLOAT"
+        )
+    )

@@ -4,7 +4,9 @@ from app.database.session import get_db
 from app.models.asset import Asset
 from app.models.port import Port
 from app.services.auth import get_current_user
+from app.services.asset_details_service import get_asset_details
 from app.models.user import User
+
 
 router = APIRouter()
 
@@ -52,17 +54,24 @@ def search_assets(
     return assets
 
 
-# Get single asset
+# Get complete asset details
 @router.get("/assets/{asset_id}")
-def get_asset(asset_id: int, db: Session = Depends(get_db)):
-    asset = db.query(Asset).filter(
-        Asset.id == asset_id
-    ).first()
+def get_asset(
+    asset_id: int,
+    db: Session = Depends(get_db)
+):
 
-    if not asset:
-        return {"message": "Asset not found"}
+    asset_details = get_asset_details(
+        db,
+        asset_id
+    )
 
-    return asset
+    if not asset_details:
+        return {
+            "message": "Asset not found"
+        }
+
+    return asset_details
 
 
 # Get ports of asset
@@ -139,3 +148,4 @@ def network_summary(db: Session = Depends(get_db)):
         "active_hosts": active_hosts,
         "total_ports": total_ports
     }
+    
