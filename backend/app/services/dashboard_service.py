@@ -180,11 +180,12 @@ def get_top_risky_assets(db: Session, limit: int = 10):
     """
 
     assets = (
-        db.query(Asset)
-        .order_by(Asset.risk_score.desc())
-        .limit(limit)
-        .all()
-    )
+         db.query(Asset)
+         .filter(Asset.risk_score.isnot(None))
+         .order_by(Asset.risk_score.desc())
+         .limit(limit)
+         .all()
+        )
 
     return [
         {
