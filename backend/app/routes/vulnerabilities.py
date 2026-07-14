@@ -1,8 +1,12 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
 from app.models.vulnerability import Vulnerability
+
+from app.services.vulnerability_details_service import (
+    get_vulnerability_details
+)
 
 router = APIRouter(
     prefix="/vulnerabilities",
@@ -15,6 +19,8 @@ def get_all_vulnerabilities(
     severity: str = Query(None),
     asset_id: int | None = Query(None),
     cve: str | None = Query(None),
+    product: str | None = Query(None),
+    version: str | None = Query(None),
     min_cvss: float = Query(None),
     max_cvss: float = Query(None),
     sort: str = Query(None),
@@ -52,6 +58,24 @@ def get_all_vulnerabilities(
      query = query.filter(
         Vulnerability.cve_id.ilike(f"%{cve}%")
     )
+
+    # -------------------------
+    # Product Filter
+    # -------------------------
+
+    if product:
+        query = query.filter(
+            Vulnerability.product.ilike(f"%{product}%")
+        )
+
+    # -------------------------
+    # Version Filter
+    # -------------------------
+
+    if version:
+        query = query.filter(
+            Vulnerability.version.ilike(f"%{version}%")
+        )
 
     # -------------------------
     # CVSS
@@ -118,3 +142,27 @@ def get_all_vulnerabilities(
         "data": vulnerabilities
 
     }
+    
+    
+@router.get(
+    "/{vulnerability_id}",
+    summary="Get Vulnerability Details",
+    description="Returns complete information about a specific vulnerability."
+)
+def vulnerability_details(
+    vulnerability_id: int,
+    db: Session = Depends(get_db)
+):
+
+    vulnerability = get_vulnerability_details(
+        db,
+        vulnerability_id
+    )
+
+    if not vulnerability:
+        raise HTTPException(
+            status_code=404,
+            detail="Vulnerability not found."
+        )
+
+    return vulnerability

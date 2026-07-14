@@ -1,6 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.database.base import Base
+from app.database.db import engine
 
+# Import models so SQLAlchemy registers them
+from app.models.asset import Asset
+from app.models.port import Port
+from app.models.vulnerability import Vulnerability
+from app.models.scan_log import ScanLog
+from app.models.user import User
 from app.routes.scan import router as scan_router
 from app.routes.assets import router as asset_router
 from app.routes.scan_logs import router as scan_logs_router
@@ -11,6 +19,7 @@ from app.routes import vulnerabilities
 from app.routes.asset_details import router as asset_details_router
 
 app = FastAPI()
+Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,

@@ -280,3 +280,110 @@ def get_vulnerability_trends(db: Session):
         }
         for month, count in trends
     ]
+    
+    
+    
+def get_top_exploitable_vulnerabilities(db: Session, limit: int = 10):
+    """
+    Returns vulnerabilities with highest exploitation probability
+    based on EPSS score.
+    """
+
+    vulnerabilities = (
+        db.query(Vulnerability)
+        .filter(
+            Vulnerability.epss_score.isnot(None)
+        )
+        .order_by(
+            Vulnerability.epss_score.desc()
+        )
+        .limit(limit)
+        .all()
+    )
+
+    return [
+        {
+            "cve": vuln.cve_id,
+            "severity": vuln.severity,
+            "cvss": vuln.cvss_score,
+            "epss": vuln.epss_score,
+            "epss_percentile": vuln.epss_percentile,
+            "product": vuln.product,
+            "version": vuln.version,
+            "asset_id": vuln.asset_id
+        }
+        for vuln in vulnerabilities
+    ]
+    
+    
+    
+def get_vendor_risk_analytics(db: Session):
+    """
+    Returns vulnerability risk statistics grouped by vendor.
+    """
+
+    results = (
+        db.query(
+            Asset.vendor,
+            func.count(Vulnerability.id).label("vulnerability_count"),
+            func.avg(Vulnerability.cvss_score).label("average_cvss"),
+            func.avg(Vulnerability.epss_score).label("average_epss")
+        )
+        .join(
+            Vulnerability,
+            Vulnerability.asset_id == Asset.id
+        )
+        .group_by(
+            Asset.vendor
+        )
+        .all()
+    )
+
+    return [
+        {
+            "vendor": vendor if vendor else "Unknown",
+            "vulnerabilities": vulnerability_count,
+            "average_cvss": round(float(avg_cvss), 2) if avg_cvss else 0,
+            "average_epss": round(float(avg_epss), 4) if avg_epss else 0
+        }
+        for vendor, vulnerability_count, avg_cvss, avg_epss in results
+    ]
+    
+    
+def get_most_vulnerable_assets(db: Session, limit: int = 10):
+    """
+    Returns assets with highest number of vulnerabilities.
+    """
+
+    results = (
+        db.query(
+            Asset.id,
+            Asset.hostname,
+            Asset.ip_address,
+            func.count(Vulnerability.id).label("vulnerability_count")
+        )
+        .join(
+            Vulnerability,
+            Vulnerability.asset_id == Asset.id
+        )
+        .group_by(
+            Asset.id,
+            Asset.hostname,
+            Asset.ip_address
+        )
+        .order_by(
+            func.count(Vulnerability.id).desc()
+        )
+        .limit(limit)
+        .all()
+    )
+
+    return [
+        {
+            "id": asset_id,
+            "hostname": hostname,
+            "ip_address": ip_address,
+            "vulnerability_count": count
+        }
+        for asset_id, hostname, ip_address, count in results
+    ]

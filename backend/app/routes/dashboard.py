@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-
+from app.services.recent_activity_service import get_recent_activity
 from app.database.session import get_db
 from app.services.dashboard_service import (
     get_dashboard_summary,
@@ -10,7 +10,10 @@ from app.services.dashboard_service import (
     get_asset_risk_distribution,
     get_top_risky_assets,
     get_vulnerability_statistics,
-    get_vulnerability_trends
+    get_vulnerability_trends,
+    get_top_exploitable_vulnerabilities,
+    get_vendor_risk_analytics,
+    get_most_vulnerable_assets
 )
 
 router = APIRouter(
@@ -105,3 +108,44 @@ def vulnerability_trends(
     db: Session = Depends(get_db)
 ):
     return get_vulnerability_trends(db)
+
+
+@router.get(
+    "/recent-activity",
+    summary="Recent Dashboard Activity",
+    description="Returns the latest scans, asset updates, and discovered vulnerabilities."
+)
+def recent_activity(
+    db: Session = Depends(get_db)
+):
+    return get_recent_activity(db)
+
+
+@router.get("/top-exploitable-vulnerabilities")
+def top_exploitable_vulnerabilities(
+    limit: int = 10,
+    db: Session = Depends(get_db)
+):
+
+    return get_top_exploitable_vulnerabilities(
+        db,
+        limit
+    )
+    
+    
+@router.get("/vendor-risk-analytics")
+def vendor_risk_analytics(
+    db: Session = Depends(get_db)
+):
+    return get_vendor_risk_analytics(db)
+
+
+@router.get("/most-vulnerable-assets")
+def most_vulnerable_assets(
+    limit: int = 10,
+    db: Session = Depends(get_db)
+):
+    return get_most_vulnerable_assets(
+        db,
+        limit
+    )

@@ -8,8 +8,6 @@ from app.models.vulnerability import Vulnerability
 from app.services.vulnerability_service import fetch_vulnerabilities
 from app.services.risk_service import calculate_asset_risk
 
-scanner = nmap.PortScanner()
-
 
 def get_os(scanner, host):
     try:
@@ -41,6 +39,7 @@ def get_vendor(scanner, host):
 
 
 def scan_target(scan_id, target, db):
+    scanner = nmap.PortScanner()
     print("========== SCAN STARTED ==========")
     print("Target:", target)
 
@@ -55,13 +54,10 @@ def scan_target(scan_id, target, db):
         # OS detection temporarily removed
         scanner.scan(hosts=target, arguments="-sV")
 
-        # Temporary debugging
-        from pprint import pprint
+        print("Scan finished")
 
-        for host in scanner.all_hosts():
-            for proto in scanner[host].all_protocols():
-                for port in scanner[host][proto]:
-                    pprint(scanner[host][proto][port])
+        print("Hosts found:")
+        print(scanner.all_hosts())
 
         total_hosts = 0
 
@@ -86,8 +82,6 @@ def scan_target(scan_id, target, db):
                 existing_asset.vendor = get_vendor(scanner, host)
                 existing_asset.scan_type = "network-range"
                 existing_asset.last_seen = datetime.utcnow()
-
-                db.commit()
 
                 asset = existing_asset
 
