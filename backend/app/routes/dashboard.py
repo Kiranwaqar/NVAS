@@ -8,7 +8,9 @@ from app.services.dashboard_service import (
     get_top_vendors,
     get_top_operating_systems,
     get_asset_risk_distribution,
-    get_top_risky_assets
+    get_top_risky_assets,
+    get_vulnerability_statistics,
+    get_vulnerability_trends
 )
 
 router = APIRouter(
@@ -81,3 +83,25 @@ def top_risky_assets(
     db: Session = Depends(get_db)
 ):
     return get_top_risky_assets(db)
+
+
+@router.get(
+    "/vulnerability-statistics",
+    summary="Vulnerability Statistics",
+    description="Returns vulnerability counts and average CVSS/EPSS values."
+)
+def vulnerability_statistics(
+    db: Session = Depends(get_db)
+):
+    return get_vulnerability_statistics(db)
+
+
+@router.get(
+    "/vulnerability-trends",
+    summary="Vulnerability Trends",
+    description="Returns vulnerability discovery counts grouped by month."
+)
+def vulnerability_trends(
+    db: Session = Depends(get_db)
+):
+    return get_vulnerability_trends(db)

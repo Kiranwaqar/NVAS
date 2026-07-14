@@ -112,7 +112,6 @@ def scan_target(scan_id, target, db):
                     Port.asset_id == asset.id
                 ).delete()
 
-                # Commit both deletions together
                 db.commit()
 
             else:
@@ -178,7 +177,12 @@ def scan_target(scan_id, target, db):
 
             db.commit()
 
-        calculate_asset_risk(asset.id, db)
+            # ----------------------------
+            # Calculate risk for THIS asset
+            # ----------------------------
+
+            calculate_asset_risk(asset.id, db)
+
         scan_log.status = f"completed ({total_hosts} hosts)"
         scan_log.completed_at = datetime.utcnow()
         db.commit()

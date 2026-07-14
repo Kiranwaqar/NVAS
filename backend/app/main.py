@@ -8,6 +8,7 @@ from app.routes.reports import router as reports_router
 from app.routes.auth import router as auth_router
 from app.routes.dashboard import router as dashboard_router
 from app.routes import vulnerabilities
+from app.routes.asset_details import router as asset_details_router
 
 app = FastAPI()
 
@@ -26,6 +27,7 @@ app.include_router(reports_router)
 app.include_router(auth_router)
 app.include_router(vulnerabilities.router)
 app.include_router(dashboard_router)
+app.include_router(asset_details_router)
 
 @app.get("/")
 def root():

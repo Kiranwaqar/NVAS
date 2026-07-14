@@ -197,3 +197,86 @@ def get_top_risky_assets(db: Session, limit: int = 10):
         }
         for asset in assets
     ]
+    
+ #stats   
+def get_vulnerability_statistics(db: Session):
+    """
+    Returns overall vulnerability statistics.
+    """
+
+    total = db.query(Vulnerability).count()
+
+    critical = (
+        db.query(Vulnerability)
+        .filter(Vulnerability.severity == "CRITICAL")
+        .count()
+    )
+
+    high = (
+        db.query(Vulnerability)
+        .filter(Vulnerability.severity == "HIGH")
+        .count()
+    )
+
+    medium = (
+        db.query(Vulnerability)
+        .filter(Vulnerability.severity == "MEDIUM")
+        .count()
+    )
+
+    low = (
+        db.query(Vulnerability)
+        .filter(Vulnerability.severity == "LOW")
+        .count()
+    )
+
+    average_cvss = (
+        db.query(func.avg(Vulnerability.cvss_score))
+        .scalar()
+        or 0
+    )
+
+    average_epss = (
+        db.query(func.avg(Vulnerability.epss_score))
+        .scalar()
+        or 0
+    )
+
+    return {
+        "total": total,
+        "critical": critical,
+        "high": high,
+        "medium": medium,
+        "low": low,
+        "average_cvss": round(average_cvss, 2),
+        "average_epss": round(average_epss, 4)
+    }
+    
+    
+#trends  
+def get_vulnerability_trends(db: Session):
+    """
+    Returns the number of vulnerabilities discovered each month.
+    """
+
+    trends = (
+        db.query(
+            func.date_trunc("month", Vulnerability.created_at).label("month"),
+            func.count(Vulnerability.id).label("count")
+        )
+        .group_by(
+            func.date_trunc("month", Vulnerability.created_at)
+        )
+        .order_by(
+            func.date_trunc("month", Vulnerability.created_at)
+        )
+        .all()
+    )
+
+    return [
+        {
+            "month": month.strftime("%Y-%m"),
+            "count": count
+        }
+        for month, count in trends
+    ]
