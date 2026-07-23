@@ -1,4 +1,5 @@
 import nmap
+import logging
 from datetime import datetime
 
 from app.models.asset import Asset
@@ -7,6 +8,9 @@ from app.models.scan_log import ScanLog
 from app.models.vulnerability import Vulnerability
 from app.services.vulnerability_service import fetch_vulnerabilities
 from app.services.risk_service import calculate_asset_risk
+from app.database.db import SessionLocal
+
+logger = logging.getLogger(__name__)
 
 
 def get_os(scanner, host):
@@ -38,26 +42,28 @@ def get_vendor(scanner, host):
     return "Unknown"
 
 
-def scan_target(scan_id, target, db):
-    scanner = nmap.PortScanner()
-    print("========== SCAN STARTED ==========")
-    print("Target:", target)
-
-    scan_log = db.query(ScanLog).filter(
-        ScanLog.id == scan_id
-    ).first()
+def scan_target(scan_id, target):
+    """Run a scan with a dedicated database session owned by this task."""
+    db = SessionLocal()
+    scan_log = None
 
     try:
+        scanner = nmap.PortScanner()
+        logger.info("Starting scan %s for authorized target %s", scan_id, target)
+        scan_log = db.query(ScanLog).filter(
+            ScanLog.id == scan_id
+        ).first()
+        if not scan_log:
+            logger.error("Scan log %s was not found", scan_id)
+            return
+
         scan_log.status = "running"
         db.commit()
 
         # OS detection temporarily removed
         scanner.scan(hosts=target, arguments="-sV")
 
-        print("Scan finished")
-
-        print("Hosts found:")
-        print(scanner.all_hosts())
+        logger.info("Scan %s completed nmap discovery", scan_id)
 
         total_hosts = 0
 
@@ -151,13 +157,6 @@ def scan_target(scan_id, target, db):
                     product = service_info.get("product", "")
                     version = service_info.get("version", "")
 
-                    print("--------------------------------")
-                    print("Port:", port)
-                    print("Service:", product)
-                    print("Version:", version)
-                    print("CPE:", cpe)
-                    print(service_info)
-
                     if cpe:
 
                         fetch_vulnerabilities(
@@ -181,12 +180,10 @@ def scan_target(scan_id, target, db):
         scan_log.completed_at = datetime.utcnow()
         db.commit()
 
-    except Exception as e:
-
-        scan_log.status = "failed"
-        db.commit()
-
-        print("========== ERROR ==========")
-        print(type(e))
-        print(e)
-        print("===========================")
+    except Exception:
+        if scan_log:
+            scan_log.status = "failed"
+            db.commit()
+        logger.exception("Scan %s failed", scan_id)
+    finally:
+        db.close()

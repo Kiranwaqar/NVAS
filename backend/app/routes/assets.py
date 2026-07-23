@@ -3,12 +3,12 @@ from sqlalchemy.orm import Session
 from app.database.session import get_db
 from app.models.asset import Asset
 from app.models.port import Port
-from app.services.auth import get_current_user
+from app.services.auth import admin_required, get_current_user
 from app.services.asset_details_service import get_asset_details
 from app.models.user import User
 
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 # Get all assets + filtering
@@ -91,6 +91,7 @@ def delete_asset(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    admin_required(current_user)
     asset = db.query(Asset).filter(
         Asset.id == asset_id
     ).first()
@@ -148,4 +149,3 @@ def network_summary(db: Session = Depends(get_db)):
         "active_hosts": active_hosts,
         "total_ports": total_ports
     }
-    

@@ -1,6 +1,0 @@
-ID,CVE,Severity,CVSS,EPSS,EPSS Percentile,Product,Version,Published,Asset IP,Hostname,Port,Service
-16,CVE-2007-4723,HIGH,7.5,0.05827,0.92295,Apache httpd,2.4.7,2007-09-05T19:17:00.000,45.33.32.156,scanme.nmap.org,80,http
-17,CVE-2009-0796,LOW,2.6,0.29638,0.97975,Apache httpd,2.4.7,2009-04-07T23:30:00.233,45.33.32.156,scanme.nmap.org,80,http
-18,CVE-2009-2299,MEDIUM,5.0,0.04255,0.89914,Apache httpd,2.4.7,2009-07-02T10:30:00.407,45.33.32.156,scanme.nmap.org,80,http
-19,CVE-2011-1176,MEDIUM,4.3,0.02721,0.84326,Apache httpd,2.4.7,2011-03-29T18:55:02.003,45.33.32.156,scanme.nmap.org,80,http
-20,CVE-2011-2688,HIGH,7.5,0.05659,0.92068,Apache httpd,2.4.7,2011-07-28T18:55:02.750,45.33.32.156,scanme.nmap.org,80,http

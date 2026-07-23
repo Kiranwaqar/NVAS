@@ -23,7 +23,7 @@ interface ScanHistoryItem {
 function ScanPage() {
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
-  const [target, setTarget] = useState("10.0.0.0/24");
+  const [target, setTarget] = useState("");
   const [scanId, setScanId] = useState<number | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
@@ -131,6 +131,7 @@ function ScanPage() {
               <input
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
+                placeholder="Authorized host or network"
                 className="h-12 w-full rounded-xl border border-input bg-muted/40 pl-10 pr-4 text-sm font-mono outline-none focus:border-primary/60"
               />
             </div>
@@ -138,7 +139,7 @@ function ScanPage() {
           <div className="flex items-end gap-2">
             <button
               onClick={handleStartScan}
-              disabled={running || loading}
+              disabled={running || loading || !target.trim()}
               className="inline-flex h-12 items-center gap-2 rounded-xl px-5 text-sm font-semibold text-primary-foreground glow-primary disabled:opacity-60"
               style={{ background: "var(--gradient-cyber)" }}
             >

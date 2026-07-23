@@ -1,4 +1,13 @@
 venv/
 .env
+!.env.example
 __pycache__/
 node_modules/
+*.pyc
+.pytest_cache/
+frontend/.output/
+frontend/.wrangler/
+backend/app/reports/*.csv
+backend/app/reports/*.json
+backend/app/reports/*.pdf
+backend/reports/

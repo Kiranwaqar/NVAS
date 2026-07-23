@@ -34,6 +34,9 @@ def verify_password(plain, hashed):
 
 
 def create_access_token(data: dict):
+    if not SECRET_KEY:
+        raise RuntimeError("SECRET_KEY must be configured before issuing access tokens")
+
     expire = datetime.utcnow() + timedelta(hours=2)
 
     to_encode = data.copy()
@@ -50,6 +53,12 @@ def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
+    if not SECRET_KEY:
+        raise HTTPException(
+            status_code=503,
+            detail="Authentication is not configured"
+        )
+
     try:
         payload = jwt.decode(
             token,

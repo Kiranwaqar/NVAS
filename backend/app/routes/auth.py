@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.database.session import get_db
 from app.models.user import User
+from app.schemas.auth import RegisterRequest
 from app.services.auth import (
     hash_password,
     verify_password,
@@ -12,13 +12,6 @@ from app.services.auth import (
 )
 
 router = APIRouter()
-
-class RegisterRequest(BaseModel):
-    username: str
-    email: str
-    password: str
-    full_name: str | None = None
-    role: str = "user"
 
 @router.post("/register")
 def register(request: RegisterRequest, db: Session = Depends(get_db)):
@@ -36,7 +29,8 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
         email=request.email,
         full_name=request.full_name,
         hashed_password=hash_password(request.password),
-        role=request.role
+        # Roles are assigned by an administrator outside public registration.
+        role="user"
     )
 
     db.add(user)
@@ -55,13 +49,18 @@ def login(
     ).first()
 
     if not user:
-        return {"message": "Invalid username"}
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-    if not verify_password(
-        form_data.password,
-        user.hashed_password
-    ):
-        return {"message": "Invalid password"}
+    if not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     token = create_access_token(
         {"sub": user.username}

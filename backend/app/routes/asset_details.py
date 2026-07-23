@@ -3,10 +3,12 @@ from sqlalchemy.orm import Session
 
 from app.database.session import get_db
 from app.services.asset_details_service import get_asset_details
+from app.services.auth import get_current_user
 
 router = APIRouter(
     prefix="/assets",
-    tags=["Asset Details"]
+    tags=["Asset Details"],
+    dependencies=[Depends(get_current_user)],
 )
 
 

@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.database.session import get_db
 from app.models.vulnerability import Vulnerability
+from app.services.auth import get_current_user
 
 from app.services.vulnerability_details_service import (
     get_vulnerability_details
@@ -10,7 +11,8 @@ from app.services.vulnerability_details_service import (
 
 router = APIRouter(
     prefix="/vulnerabilities",
-    tags=["Vulnerabilities"]
+    tags=["Vulnerabilities"],
+    dependencies=[Depends(get_current_user)],
 )
 
 
